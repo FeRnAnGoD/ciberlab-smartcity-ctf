@@ -179,5 +179,6 @@ def status():
     })
 
 if __name__ == "__main__":
-    # El launcher se publica en el puerto 8080
-    app.run(host="0.0.0.0", port=8080, debug=False)
+    # El launcher se publica internamente en el puerto 8081.
+    # Nginx lo expone al exterior bajo la ruta /maintenance/
+    app.run(host="127.0.0.1", port=8081, debug=False)

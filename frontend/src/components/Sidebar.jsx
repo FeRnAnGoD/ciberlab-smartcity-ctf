@@ -23,7 +23,7 @@ export default function Sidebar({ userRole, userName }) {
     const top  = (window.screen.height - h) / 2;
 
     window.open(
-      '/api/maintenance/portal',
+      '/maintenance/',
       'SCADA_Maintenance_Console',
       `width=${w},height=${h},top=${top},left=${left},resizable=yes,scrollbars=yes,status=no`
     );

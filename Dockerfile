@@ -37,6 +37,9 @@ COPY backend/ /app/backend/
 # Copiar el build del frontend a Nginx
 COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 
+# Copiar el launcher del portal de mantenimiento
+COPY ctf-planta-gas/launcher /app/ctf-planta-gas/launcher
+
 # Copiar archivos de configuración
 COPY nginx.conf /etc/nginx/sites-available/default
 COPY entrypoint.sh /app/entrypoint.sh
