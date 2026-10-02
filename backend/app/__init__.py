@@ -21,6 +21,9 @@ def create_app():
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:root@localhost/planta_gas')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    # Necesario para que la cookie de sesión del portal de mantenimiento
+    # funcione correctamente en el popup abierto desde el panel principal
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
     # Inicializar extensiones
     db.init_app(app)

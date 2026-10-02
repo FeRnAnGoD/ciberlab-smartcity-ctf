@@ -4,19 +4,17 @@ import string
 import time
 import threading
 import socket
-from flask import Blueprint, request, jsonify, render_template_string, make_response
-from flask_jwt_extended import jwt_required, get_jwt
+from flask import Blueprint, request, jsonify, render_template_string, session
 
 maintenance_bp = Blueprint('maintenance', __name__, url_prefix='/api/maintenance')
 
-# ── Configuración del Launcher ──────────────────────────────────────────────
-DOCKER_IMAGE  = "ctf-participantes"
-NETWORK_NAME  = "ctf_network"
-PORT_RANGE    = range(5001, 5051)   # 50 slots SSH disponibles
-DEFAULT_TTL   = 3600                # 1 hora
-EXTEND_TIME   = 1800                # +30 minutos
+# ── Configuración ─────────────────────────────────────────────────────────────
+DOCKER_IMAGE = "ctf-participantes"
+NETWORK_NAME = "ctf_network"
+PORT_RANGE   = range(5001, 5051)
+DEFAULT_TTL  = 3600   # 1 hora
+EXTEND_TIME  = 1800   # +30 min
 
-# Intento de conexión al socket Docker (puede fallar si no está montado)
 try:
     docker_client = docker.from_env()
     DOCKER_AVAILABLE = True
@@ -24,11 +22,11 @@ except Exception:
     docker_client = None
     DOCKER_AVAILABLE = False
 
-# Estado en memoria: { session_token: { container_id, port, password, expire_at } }
+# Estado en memoria: { session_id → { container_id, port, password, expire_at } }
 active_instances: dict = {}
 _lock = threading.Lock()
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def get_host_ip() -> str:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -47,16 +45,17 @@ def get_free_port():
             return p
     return None
 
-def generate_password(length: int = 12) -> str:
+def generate_password(length: int = 10) -> str:
     chars = string.ascii_letters + string.digits
     return ''.join(secrets.choice(chars) for _ in range(length))
 
-def _session_key_from_jwt() -> str:
-    """Genera una clave de sesión estable a partir del JWT del usuario."""
-    claims = get_jwt()
-    return f"user_{claims.get('sub', 'unknown')}"
+def get_session_key() -> str:
+    """Clave de sesión estable basada en la sesión de Flask del portal."""
+    if 'maint_id' not in session:
+        session['maint_id'] = secrets.token_hex(16)
+    return session['maint_id']
 
-# ── Garbage Collector ────────────────────────────────────────────────────────
+# ── Garbage Collector ─────────────────────────────────────────────────────────
 
 def _garbage_collector():
     while True:
@@ -67,7 +66,6 @@ def _garbage_collector():
             for key, data in list(active_instances.items()):
                 if now >= data['expire_at']:
                     expired.append((key, data['container_id']))
-
         for key, cid in expired:
             print(f"[maintenance] TTL expirado → destruyendo {cid[:12]}")
             try:
@@ -83,24 +81,7 @@ def _garbage_collector():
 _gc_thread = threading.Thread(target=_garbage_collector, daemon=True)
 _gc_thread.start()
 
-# ── Decorador de rol admin ───────────────────────────────────────────────────
-
-def admin_required(fn):
-    """Wrapper que rechaza con 403 si el JWT no tiene rol 'admin'."""
-    from functools import wraps
-    @wraps(fn)
-    @jwt_required()
-    def wrapper(*args, **kwargs):
-        claims = get_jwt()
-        if claims.get('role') != 'admin':
-            return jsonify({
-                "error": "Acceso denegado",
-                "detail": "Esta sección es exclusiva para administradores del sistema."
-            }), 403
-        return fn(*args, **kwargs)
-    return wrapper
-
-# ── Portal HTML (sirve el index.html del launcher como string) ───────────────
+# ── HTML del Portal (igual al index.html de referencia) ───────────────────────
 
 PORTAL_HTML = r"""<!DOCTYPE html>
 <html lang="es">
@@ -184,6 +165,7 @@ PORTAL_HTML = r"""<!DOCTYPE html>
             transition: all 0.2s ease; box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
         }
         .btn-spawn:hover { background: #55eeff; box-shadow: 0 0 30px rgba(0,229,255,0.8); transform: translateY(-2px); }
+        .btn-spawn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .active-box { display: none; }
         .timer-container {
             display: flex; justify-content: space-between; align-items: center;
@@ -235,7 +217,6 @@ PORTAL_HTML = r"""<!DOCTYPE html>
         </div>
 
         <div class="card">
-            <!-- VISTA 1: SOLICITAR INSTANCIA -->
             <div id="spawnView" class="spawn-box">
                 <p class="spawn-desc">
                     Al solicitar acceso se desplegará una terminal de diagnóstico aislada con acceso por SSH a los equipos de la planta.
@@ -246,7 +227,6 @@ PORTAL_HTML = r"""<!DOCTYPE html>
                 </button>
             </div>
 
-            <!-- VISTA 2: INSTANCIA ACTIVA -->
             <div id="activeView" class="active-box">
                 <div class="timer-container">
                     <span class="timer-label">TIEMPO RESTANTE DE SESIÓN:</span>
@@ -284,25 +264,22 @@ PORTAL_HTML = r"""<!DOCTYPE html>
     </div>
 
     <script>
-        // Leer el JWT guardado en localStorage por la app React
-        const TOKEN = localStorage.getItem('access_token') || '';
         const HOST_IP = '{{ host_ip }}';
         let remainingSeconds = 0;
         let timerInterval = null;
 
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${TOKEN}`
-        };
-
         async function checkStatus() {
             try {
-                const res = await fetch('/api/maintenance/status', { headers });
-                if (res.status === 403) { document.body.innerHTML = '<h2 style="color:#ff3344;text-align:center;margin-top:40vh">Acceso denegado: solo administradores.</h2>'; return; }
+                const res = await fetch('/api/maintenance/status');
                 const data = await res.json();
-                if (data.active) { showActiveView(data.port, data.password, data.remaining_seconds); }
-                else { showSpawnView(); }
-            } catch(e) {}
+                if (data.active) {
+                    showActiveView(data.port, data.password, data.remaining_seconds);
+                } else {
+                    showSpawnView();
+                }
+            } catch(e) {
+                showSpawnView();
+            }
         }
 
         function showSpawnView() {
@@ -340,17 +317,25 @@ PORTAL_HTML = r"""<!DOCTYPE html>
             btn.innerText = 'INICIALIZANDO TERMINAL SCADA...';
             btn.disabled = true;
             try {
-                const res = await fetch('/api/maintenance/spawn', { method: 'POST', headers });
+                const res = await fetch('/api/maintenance/spawn', { method: 'POST' });
                 const data = await res.json();
-                if (data.success) { checkStatus(); }
-                else { alert(data.error || 'Error al desplegar instancia'); }
-            } catch(e) { alert('Error de conexión con la planta'); }
-            finally { btn.innerText = '[ INICIAR SESIÓN DE MANTENIMIENTO ]'; btn.disabled = false; }
+                if (data.success) {
+                    checkStatus();
+                } else {
+                    alert(data.error || 'Error al desplegar instancia');
+                    btn.innerText = '[ INICIAR SESIÓN DE MANTENIMIENTO ]';
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                alert('Error de conexión con la planta: ' + e.message);
+                btn.innerText = '[ INICIAR SESIÓN DE MANTENIMIENTO ]';
+                btn.disabled = false;
+            }
         }
 
         async function extendInstance() {
             try {
-                const res = await fetch('/api/maintenance/extend', { method: 'POST', headers });
+                const res = await fetch('/api/maintenance/extend', { method: 'POST' });
                 const data = await res.json();
                 if (data.success) { checkStatus(); }
             } catch(e) {}
@@ -359,7 +344,7 @@ PORTAL_HTML = r"""<!DOCTYPE html>
         async function destroyInstance() {
             if (!confirm('¿Seguro que deseas cerrar la sesión de mantenimiento?')) return;
             try {
-                const res = await fetch('/api/maintenance/destroy', { method: 'POST', headers });
+                const res = await fetch('/api/maintenance/destroy', { method: 'POST' });
                 const data = await res.json();
                 if (data.success) { showSpawnView(); }
             } catch(e) {}
@@ -379,19 +364,17 @@ PORTAL_HTML = r"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# ── Rutas ────────────────────────────────────────────────────────────────────
+# ── Rutas (sin JWT — el portal usa sesiones de Flask) ────────────────────────
 
 @maintenance_bp.route('/portal')
 def portal():
-    """Sirve la página HTML del portal de mantenimiento."""
     host_ip = get_host_ip()
     return render_template_string(PORTAL_HTML, host_ip=host_ip)
 
 
 @maintenance_bp.route('/status')
-@admin_required
 def status():
-    key = _session_key_from_jwt()
+    key = get_session_key()
     instance = active_instances.get(key)
     if not instance:
         return jsonify({"active": False})
@@ -405,12 +388,11 @@ def status():
 
 
 @maintenance_bp.route('/spawn', methods=['POST'])
-@admin_required
 def spawn():
     if not DOCKER_AVAILABLE:
         return jsonify({"success": False, "error": "Docker no disponible en este entorno."}), 503
 
-    key = _session_key_from_jwt()
+    key = get_session_key()
     with _lock:
         if key in active_instances:
             return jsonify({"success": True, "message": "Ya tienes una instancia activa."})
@@ -420,7 +402,7 @@ def spawn():
             return jsonify({"success": False, "error": "No hay puertos disponibles."}), 503
 
         password = generate_password()
-        container_name = f"maint_{key[:12]}_{port}"
+        container_name = f"maint_{key[:8]}_{port}"
 
         try:
             container = docker_client.containers.run(
@@ -431,8 +413,10 @@ def spawn():
                 detach=True,
                 remove=False
             )
-            container.exec_run(f"sh -c \"echo 'tech_admin:{password}' | chpasswd\"", user="root")
-
+            container.exec_run(
+                f"sh -c \"echo 'tech_admin:{password}' | chpasswd\"",
+                user="root"
+            )
             active_instances[key] = {
                 "container_id": container.id,
                 "port": port,
@@ -444,14 +428,13 @@ def spawn():
             return jsonify({"success": True})
 
         except Exception as e:
-            print(f"[maintenance] Error: {e}")
+            print(f"[maintenance] Error spawn: {e}")
             return jsonify({"success": False, "error": str(e)}), 500
 
 
 @maintenance_bp.route('/extend', methods=['POST'])
-@admin_required
 def extend():
-    key = _session_key_from_jwt()
+    key = get_session_key()
     with _lock:
         if key in active_instances:
             active_instances[key]['expire_at'] += EXTEND_TIME
@@ -460,9 +443,8 @@ def extend():
 
 
 @maintenance_bp.route('/destroy', methods=['POST'])
-@admin_required
 def destroy():
-    key = _session_key_from_jwt()
+    key = get_session_key()
     with _lock:
         data = active_instances.pop(key, None)
     if data:
@@ -472,6 +454,6 @@ def destroy():
                 c.remove(force=True)
                 print(f"[maintenance] Contenedor {data['container_name']} destruido.")
         except Exception as e:
-            print(f"[maintenance] Error al destruir: {e}")
+            print(f"[maintenance] Error destroy: {e}")
         return jsonify({"success": True})
     return jsonify({"success": False, "error": "Instancia no encontrada."}), 404
