@@ -31,8 +31,10 @@ def create_app():
     # Registrar blueprints
     from app.api.auth import auth_bp
     from app.api.gas_cuadrante import gas_bp
+    from app.api.maintenance import maintenance_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(gas_bp, url_prefix='/api/gas')
+    app.register_blueprint(maintenance_bp)
 
     return app

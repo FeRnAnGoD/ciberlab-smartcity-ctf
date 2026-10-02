@@ -735,6 +735,18 @@ export default function ControlPanel() {
                     {systemPower ? 'Apagar Planta' : 'Encender Planta'}
                   </button>
                 )}
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      // Abre el portal en nueva pestaña; el token ya está en localStorage
+                      window.open('/api/maintenance/portal', '_blank');
+                    }}
+                    className="btn btn-sm btn-outline-warning"
+                    title="Portal de mantenimiento OT (solo admin)"
+                  >
+                    🔧 Mantenimiento
+                  </button>
+                )}
               </div>
             </div>
 

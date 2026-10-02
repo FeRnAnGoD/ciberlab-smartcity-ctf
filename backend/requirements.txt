@@ -8,3 +8,4 @@ Flask-CORS==4.0.0
 paho-mqtt==2.1.0
 requests==2.31.0
 gunicorn==22.0.0
+docker==7.1.0
