@@ -382,7 +382,6 @@ PORTAL_HTML = r"""<!DOCTYPE html>
 # ── Rutas ────────────────────────────────────────────────────────────────────
 
 @maintenance_bp.route('/portal')
-@admin_required
 def portal():
     """Sirve la página HTML del portal de mantenimiento."""
     host_ip = get_host_ip()
