@@ -1,0 +1,281 @@
+/* ==========================================
+   ANIMACIÓN LIQUID WAVE ININTERRUMPIDA
+   ========================================== */
+
+.liquid-tank-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.liquid-tank-svg {
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.3));
+}
+
+.seamless-wave {
+  will-change: transform;
+}
+
+/* Movimiento continuo de la Ola Principal */
+.wave-front {
+  animation: seamlessWaveFront 2.8s linear infinite;
+}
+
+/* Movimiento cruzado de la Ola de Fondo */
+.wave-back {
+  animation: seamlessWaveBack 4.2s linear infinite;
+}
+
+/* Coincidencia matemática exacta con el período SVG (160px) */
+@keyframes seamlessWaveFront {
+  0% {
+    transform: translateX(0px);
+  }
+  100% {
+    transform: translateX(-160px);
+  }
+}
+
+@keyframes seamlessWaveBack {
+  0% {
+    transform: translateX(-160px);
+  }
+  100% {
+    transform: translateX(0px);
+  }
+}
+
+/* Animación de burbujas flotantes */
+.bubble {
+  animation: floatUp 3s infinite ease-in;
+}
+
+.bubble-1 { animation-delay: 0s; animation-duration: 2.8s; }
+.bubble-2 { animation-delay: 1.2s; animation-duration: 3.5s; }
+.bubble-3 { animation-delay: 0.6s; animation-duration: 2.2s; }
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-130px);
+    opacity: 0;
+  }
+}
+
+/* ==========================================
+   ANIMACIÓN DE HUMO FLUIDO SIN ESTANCAMIENTO MEDIO
+   ========================================== */
+
+.chimneys-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.chimneys-svg {
+  overflow: hidden;
+}
+
+.smoke-plume {
+  transform-origin: 30px 75px;
+  /* Transición fluida en ease-out para velocidad constante de ascenso */
+  animation: continuousPlume 1.8s infinite ease-out;
+  will-change: transform, opacity;
+}
+
+/* Ritmo acelerado y uniforme entre ráfagas (0.35s de desfase) */
+.smoke-1  { animation-delay: 0.00s; }
+.smoke-2  { animation-delay: 0.35s; }
+.smoke-3  { animation-delay: 0.70s; }
+.smoke-4  { animation-delay: 1.05s; }
+.smoke-5  { animation-delay: 1.40s; }
+
+.smoke-6  { animation-delay: 0.18s; }
+.smoke-7  { animation-delay: 0.53s; }
+.smoke-8  { animation-delay: 0.88s; }
+.smoke-9  { animation-delay: 1.23s; }
+.smoke-10 { animation-delay: 1.58s; }
+
+@keyframes continuousPlume {
+  0% {
+    transform: translateY(0) scaleX(0.3) scaleY(0.5);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.85; /* Emisión rápida en la boca */
+  }
+  35% {
+    /* Desvanecimiento rápido en el tramo medio para eliminar la persistencia estática */
+    opacity: 0.35;
+    transform: translateY(-22px) translateX(-10px) scaleX(1.8) scaleY(1.3) rotate(-6deg);
+  }
+  100% {
+    /* Salida limpia sin pausa */
+    transform: translateY(-55px) translateX(-26px) scaleX(3.4) scaleY(2.2) rotate(-14deg);
+    opacity: 0;
+  }
+}
+
+/* ===================================================
+   ESTILOS PARA PANEL LUCES RGB Y ANIMACIÓN OLA (WAVE)
+   =================================================== */
+
+.rgb-strip-container {
+  position: relative;
+  width: 100%;
+  height: 60px;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #0d1117;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.4s ease;
+}
+
+/* Tira LED / Rectángulo Animado con Flujo */
+.rgb-wave-bar {
+  width: 200%;
+  height: 100%;
+  background-size: 50% 100%;
+  background-repeat: repeat-x;
+  animation: waveFlow 2.5s linear infinite;
+  transition: opacity 0.5s ease;
+}
+
+/* Transición suave y resplandor al estar encendido */
+.rgb-strip-container.on {
+  box-shadow: 0 0 25px var(--glow-color, rgba(0, 212, 255, 0.6)),
+              inset 0 0 15px rgba(255, 255, 255, 0.4);
+}
+
+.rgb-strip-container.off {
+  box-shadow: none;
+  border-color: #333;
+}
+
+/* Animación de traslación horizontal para el efecto ola/electricidad */
+@keyframes waveFlow {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Efecto de partículas / chispa interna opcional */
+.rgb-glass-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.25) 100%);
+  pointer-events: none;
+}
+
+/* ===================================================
+   ANIMACIONES DE ALERTA Y EMERGENCIA DE TEMPERATURA
+   =================================================== */
+
+/* Parpadeo rojo suave en toda la interfaz durante alerta crítica */
+.critical-emergency-bg {
+  animation: pageRedPulse 2s infinite ease-in-out;
+}
+
+@keyframes pageRedPulse {
+  0% {
+    background-color: #f8f9fa;
+  }
+  50% {
+    background-color: rgba(231, 76, 60, 0.18);
+  }
+  100% {
+    background-color: #f8f9fa;
+  }
+}
+
+/* Pop-up de Advertencia (Chiller apagado / Temp > 30°C) */
+.temp-warning-popup {
+  position: fixed;
+  top: 85px;
+  right: 25px;
+  z-index: 1050;
+  min-width: 320px;
+  max-width: 440px;
+  background-color: #fff3cd;
+  border: 2px solid #ffe69c;
+  color: #3d2b00; /* Texto oscuro para alto contraste */
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  animation: popupSlideIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.temp-warning-popup .warning-title {
+  color: #533f03;
+}
+
+.temp-warning-popup .warning-body {
+  color: #3d2b00 !important;
+  font-weight: 500;
+}
+
+@keyframes popupSlideIn {
+  from {
+    transform: translateX(120%) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Recuadro de Alerta Crítica (400°C - 580°C) */
+.critical-alert-box {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  width: 92%;
+  max-width: 680px;
+  background: linear-gradient(135deg, #e74c3c 0%, #900c3f 100%);
+  border: 4px solid #f1c40f;
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 20px 24px;
+  animation: criticalBoxPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes criticalBoxPulse {
+  0% {
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.6), 0 0 25px rgba(231, 76, 60, 0.8);
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(241, 196, 15, 0.95), 0 0 45px rgba(231, 76, 60, 1);
+    transform: translateX(-50%) scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.6), 0 0 25px rgba(231, 76, 60, 0.8);
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+/* BARRA DE ESTADO CON ANIMACIÓN DE DESVANECIMIENTO (FADE OUT) */
+.scada-status-alert {
+  transition: opacity 1.2s ease-out;
+  opacity: 1;
+}
+
+.scada-status-alert.fading {
+  opacity: 0;
+}

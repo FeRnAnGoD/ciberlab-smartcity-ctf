@@ -1,0 +1,66 @@
+MANUAL DE OPERACION - SISTEMA DE REFRIGERACION (CHILLER)
+Planta de Gas Cuadrante 2 | Rev. 3.1 | Agosto 2026
+==========================================================
+
+1. DESCRIPCION GENERAL
+   El Chiller es el sistema de enfriamiento principal de las tuberias
+   de conduccion de gas natural. Su funcion es mantener la temperatura
+   operativa de las tuberias y camaras de almacenamiento dentro del
+   rango seguro de -15 C a 30 C.
+
+   Sin el sistema de refrigeracion activo, el calor residual del
+   compresor y la friccion de las valvulas elevan rapidamente la
+   temperatura del sistema, pudiendo alcanzar la zona de autoignicion
+   del gas (400 C - 580 C).
+
+2. ESPECIFICACIONES TECNICAS
+   - Modelo:            CoolMaster IND-7700-G
+   - Capacidad frigorifica: 120 kW
+   - Refrigerante:      R-134a (HFC)
+   - Temperatura minima: -20 C
+   - Temperatura maxima operativa: 30 C
+   - Consumo nominal:   45 kWh
+   - Protocolo de comunicacion: Modbus RTU (RS-485)
+   - Registro Modbus temperatura actual: 40001
+
+3. PROCEDIMIENTO DE ENCENDIDO
+   a) Verificar que la presion de sistema sea >= 400 PSI.
+   b) Confirmar que no hay alarmas activas en el Panel SCADA.
+   c) Activar el interruptor del Chiller en el Panel de Control
+      (requiere credenciales de Administrador).
+   d) Esperar confirmacion de descenso de temperatura en los
+      siguientes 60 segundos.
+   e) Registrar hora de encendido en el Libro de Guardia.
+
+4. PROCEDIMIENTO DE APAGADO (SOLO POR PROTOCOLO AUTORIZADO)
+   ADVERTENCIA: El apagado no autorizado del Chiller es una
+   infraccion grave al protocolo de seguridad industrial.
+   
+   a) Obtener autorizacion escrita del Jefe de Turno.
+   b) Notificar al equipo de guardia.
+   c) Ejecutar el apagado desde el Panel SCADA.
+   d) Monitorear temperatura cada 30 segundos.
+   e) Si temperatura supera 100 C: activar protocolo de emergencia.
+
+5. ZONA DE RIESGO - AUTOIGNICION
+   CRITICO: Si la temperatura de las tuberias alcanza 400 C,
+   los gases de la mezcla (Metano CH4, Propano C3H8, Butano C4H10)
+   entran en la zona de combustion espontanea sin necesidad de chispa.
+   
+   Temperatura de Autoignicion por componente:
+   - Metano (CH4):  580 C
+   - Propano (C3H8): 470 C  
+   - Butano (C4H10): 405 C
+   
+   Al alcanzar esta zona, el sistema SCRAM (Safety Control Rod Axe Man)
+   se activa automaticamente y emite un codigo de emergencia al
+   Centro de Control.
+
+6. CONTACTOS DE EMERGENCIA
+   - Jefe de Turno:       interno 301
+   - Brigada de Incendio: interno 911
+   - Centro de Control:   interno 100
+
+==========================================================
+FIN DEL DOCUMENTO
+Proxima revision: Febrero 2027

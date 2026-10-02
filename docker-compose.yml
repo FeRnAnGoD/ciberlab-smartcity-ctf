@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Instancia aislada para el Atacante / Equipo 1
+  atacante1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ctf_atacante_1
+    restart: unless-stopped
+    ports:
+      # Expone esta instancia en el puerto 8001 del servidor Debian
+      - "8001:80"
+    environment:
+      # Se usa SQLite de forma nativa para garantizar consumo de RAM casi nulo
+      - DATABASE_URL=sqlite:////app/backend/planta_gas.db
+    # Si necesitan acceso a puertos seriales de OT desde docker:
+    # devices:
+    #   - "/dev/ttyUSB0:/dev/ttyUSB0"
+
+  # Instancia aislada para el Atacante / Equipo 2
+  atacante2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ctf_atacante_2
+    restart: unless-stopped
+    ports:
+      # Expone esta instancia en el puerto 8002 del servidor Debian
+      - "8002:80"
+    environment:
+      - DATABASE_URL=sqlite:////app/backend/planta_gas.db
+
+  # Instancia aislada para el Atacante / Equipo 3
+  atacante3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ctf_atacante_3
+    restart: unless-stopped
+    ports:
+      # Expone esta instancia en el puerto 8003 del servidor Debian
+      - "8003:80"
+    environment:
+      - DATABASE_URL=sqlite:////app/backend/planta_gas.db
+
+# Puedes copiar y pegar el bloque superior para crear
+# atacante4, atacante5, cambiando el número de puerto (8004, 8005...)
