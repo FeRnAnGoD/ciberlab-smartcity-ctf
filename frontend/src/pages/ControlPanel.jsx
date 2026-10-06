@@ -706,14 +706,6 @@ export default function ControlPanel() {
                   {systemPower ? 'SISTEMA ACTIVO' : 'DETENIDO'}
                 </span>
                 {isAdmin && (
-                  <button 
-                    onClick={() => setSystemPower(!systemPower)} 
-                    className={`btn btn-sm ${systemPower ? 'btn-outline-danger' : 'btn-success'}`}
-                  >
-                    {systemPower ? 'Apagar Planta' : 'Encender Planta'}
-                  </button>
-                )}
-                {isAdmin && (
                   <button
                     onClick={() => {
                       // Abre el portal en nueva pestaña; el token ya está en localStorage
@@ -992,28 +984,28 @@ export default function ControlPanel() {
                     </span>
                   </div>
 
+                  {/* TORRES DE ESCAPE Y CALDERAS - movidas aquí */}
+                  <div className="scada-card p-3 text-center d-flex flex-column justify-content-between mt-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <div className="d-flex justify-content-between align-items-center mb-2 px-2">
+                      <h6 className="fw-bold text-light m-0" style={{ fontSize: '0.9rem' }}>Torres de Escape y Calderas de Ventilación</h6>
+                      <span className={`badge ${systemPower ? 'bg-success' : 'bg-secondary'}`}>
+                        {systemPower ? 'EMISIÓN ACTIVA (130°C - 180°C)' : 'INACTIVO'}
+                      </span>
+                    </div>
+                    <IndustrialChimneys isOperating={systemPower} />
+                  </div>
+
                 </div>
               </div>
 
             </div>
 
             {/* SECCIÓN INFERIOR */}
-            <div className="row g-3">
-              <div className="col-md-6">
-                <div className="scada-card p-3 text-center h-100 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-center mb-2 px-2">
-                    <h6 className="fw-bold text-secondary m-0">Torres de Escape y Calderas de Ventilación</h6>
-                    <span className={`badge ${systemPower ? 'bg-success' : 'bg-secondary'}`}>
-                      {systemPower ? 'EMISIÓN ACTIVA (130°C - 180°C)' : 'INACTIVO'}
-                    </span>
-                  </div>
-                  <IndustrialChimneys isOperating={systemPower} />
-                </div>
-              </div>
+            <div className="row justify-content-center g-3">
 
-              <div className="col-md-6">
+              <div className="col-md-8 mx-auto">
                 <div className="scada-card p-3 h-100 d-flex flex-column justify-content-between">
-                  <h6 className="fw-bold text-secondary mb-3">Red de Distribución por Sectores</h6>
+                  <h6 className="fw-bold text-secondary mb-3 text-center">Red de Distribución por Sectores</h6>
                   <ul className="list-group list-group-flush flex-grow-1 d-flex flex-column justify-content-around">
                     <li className="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent">
                       <span className="fw-medium text-dark">Sector A - Matriz Norte</span>
