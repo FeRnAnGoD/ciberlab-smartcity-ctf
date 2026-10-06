@@ -222,9 +222,16 @@ def list_reports():
 def download_report():
     """
     Endpoint para descargar reportes de la planta.
+
     VULNERABILIDAD INTENCIONAL (CTF): El parámetro 'file' no valida
-    secuencias '../', permitiendo leer archivos arbitrarios del servidor
-    fuera del directorio reports/ (Path Traversal / Directory Traversal).
+    secuencias '../', permitiendo navegar fuera de reports/ mediante
+    Path Traversal (ej: ../api/auth_config.py).
+
+    MITIGACIÓN PARCIAL: Se aplica allowlist de rutas absolutas resueltas.
+    Solo se permiten:
+      - Cualquier archivo dentro de reports/   (PDFs, manuales)
+      - app/auth_config.py                     (objetivo CTF Flag 1)
+    Cualquier otra ruta devuelve 403, protegiendo __init__.py, run.py, etc.
     """
     filename = request.args.get('file', '')
 
@@ -232,13 +239,30 @@ def download_report():
         return jsonify({"error": "Parámetro 'file' requerido"}), 400
 
     reports_dir = os.path.join(current_app.root_path, 'reports')
-    # Normalizar ruta para resolver secuencias '../' en Windows y Linux
+    app_dir     = current_app.root_path  # backend/app/
+
+    # Resolver la ruta final (resuelve ../ sin bloquear, vulnerabilidad intencional)
     file_path = os.path.normpath(os.path.join(reports_dir, filename))
 
-    if os.path.exists(file_path) and os.path.isfile(file_path):
-        return send_file(file_path, as_attachment=True)
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        return jsonify({"error": f"Archivo no encontrado: {filename}"}), 404
 
-    return jsonify({"error": f"Archivo no encontrado: {filename}"}), 404
+    # ── ALLOWLIST: únicas rutas que se pueden servir ──────────────────────
+    allowed_paths = {
+        os.path.normpath(reports_dir),                                  # toda la carpeta reports/
+        os.path.normpath(os.path.join(app_dir, 'auth_config.py')),     # objetivo del Flag 1
+    }
+
+    is_allowed = any(
+        file_path == allowed or file_path.startswith(allowed + os.sep)
+        for allowed in allowed_paths
+    )
+
+    if not is_allowed:
+        print(f"[SECURITY] Descarga bloqueada: {file_path}")
+        return jsonify({"error": "Acceso denegado: archivo fuera del directorio autorizado"}), 403
+
+    return send_file(file_path, as_attachment=True)
 
 ####################################################################
 # --- MANEJO DE TOKEN EN ARCHIVO (PERSISTENCIA ENTRE PROCESOS FLASK) ---
