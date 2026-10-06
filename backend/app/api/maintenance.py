@@ -38,8 +38,32 @@ def get_host_ip() -> str:
     finally:
         s.close()
 
+def get_used_host_ports() -> set:
+    """Consulta el daemon Docker del host para obtener todos los puertos en uso."""
+    used = set()
+    if not docker_client:
+        return used
+    try:
+        for container in docker_client.containers.list():
+            for bindings in container.ports.values():
+                if bindings:
+                    for b in bindings:
+                        try:
+                            used.add(int(b['HostPort']))
+                        except (KeyError, ValueError):
+                            pass
+    except Exception as e:
+        print(f"[maintenance] Warning al consultar puertos Docker: {e}")
+    return used
+
 def get_free_port():
-    used = {v['port'] for v in active_instances.values()}
+    """Devuelve el primer puerto del rango que no esté ocupado en el host."""
+    # Puertos usados por instancias de este sistema
+    used_local = {v['port'] for v in active_instances.values()}
+    # Puertos usados por CUALQUIER contenedor Docker en el host
+    used_docker = get_used_host_ports()
+    used = used_local | used_docker
+    print(f"[maintenance] Puertos en uso: {sorted(used)}")
     for p in PORT_RANGE:
         if p not in used:
             return p
