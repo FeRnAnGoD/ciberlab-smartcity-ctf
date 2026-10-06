@@ -6,6 +6,7 @@ import ControlPanel from './pages/ControlPanel';
 import Reports from './pages/Reports';
 import Messages from './pages/Messages';
 import Settings from './pages/Settings';
+import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
 function App() {
@@ -22,13 +23,27 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Rutas públicas */}
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<ControlPanel />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/messages" element={<Messages />} />
-        <Route path="/settings" element={<Settings />} />
+
+        {/* Rutas privadas — requieren token JWT */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute><ControlPanel /></ProtectedRoute>
+        } />
+        <Route path="/reports" element={
+          <ProtectedRoute><Reports /></ProtectedRoute>
+        } />
+        <Route path="/messages" element={
+          <ProtectedRoute><Messages /></ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute><Settings /></ProtectedRoute>
+        } />
+
+        {/* Cualquier ruta desconocida → login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
