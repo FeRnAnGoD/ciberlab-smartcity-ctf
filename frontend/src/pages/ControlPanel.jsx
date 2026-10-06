@@ -102,9 +102,7 @@ export default function ControlPanel() {
   const [user, setUser] = useState({ username: '', role: '' });
   
   // CONTROL DE PESTAÑAS PRINCIPALES
-  const [activeTab, setActiveTab] = useState('gas');
-
-  // ESTADOS DE LA PLANTA DE GAS
+    // ESTADOS DE LA PLANTA DE GAS
   const [systemPower, setSystemPower] = useState(true);
   const [tankLevel, setTankLevel] = useState(78);
   const [pressure, setPressure] = useState(450);
@@ -678,27 +676,8 @@ export default function ControlPanel() {
           </div>
         )}
 
-        {/* NAVBAR SUPERIOR */}
-        <div className="bg-dark p-2 rounded-3 mb-4 d-flex justify-content-between align-items-center shadow-sm">
-          <ul className="nav nav-pills gap-2">
-            <li className="nav-item">
-              <button 
-                className={`nav-link fw-bold px-4 ${activeTab === 'gas' ? 'active bg-primary text-white' : 'text-light'}`}
-                onClick={() => setActiveTab('gas')}
-              >
-                🔥 Planta de Gas
-              </button>
-            </li>
-            <li className="nav-item">
-              <button 
-                className={`nav-link fw-bold px-4 ${activeTab === 'rgb' ? 'active bg-primary text-white' : 'text-light'}`}
-                onClick={() => setActiveTab('rgb')}
-              >
-                💡 Luces RGB
-              </button>
-            </li>
-          </ul>
-
+        {/* HEADER SUPERIOR */}
+        <div className="bg-dark p-3 rounded-3 mb-4 d-flex justify-content-end align-items-center shadow-sm">
           <div className="d-flex align-items-center gap-3 px-3">
             <div className="text-end">
               <span className="text-white fw-bold d-block" style={{ fontSize: '0.92rem' }}>
@@ -708,15 +687,14 @@ export default function ControlPanel() {
                 {isAdmin ? 'Administrador' : 'Ingeniero de Planta'}
               </small>
             </div>
-            <span className="badge bg-secondary">{activeTab === 'gas' ? 'Vista Operacional' : 'Vista Iluminación'}</span>
+            <span className="badge bg-secondary">'Vista Operacional'</span>
           </div>
         </div>
 
         {/* ========================================================================= */}
         {/* VISTA 1: PLANTA DE GAS */}
         {/* ========================================================================= */}
-        {activeTab === 'gas' && (
-          <>
+        
             <div className="d-flex justify-content-between align-items-center mb-4">
               <div>
                 <h2 className="fw-bold text-dark m-0">Centro de Monitoreo SCADA - Planta de Gas</h2>
@@ -1061,133 +1039,6 @@ export default function ControlPanel() {
                 </div>
               </div>
             </div>
-          </>
-        )}
-
-        {/* ========================================================================= */}
-        {/* VISTA 2: PANEL DE LUCES RGB */}
-        {/* ========================================================================= */}
-        {activeTab === 'rgb' && (
-          <div className="row justify-content-center">
-            <div className="col-lg-10">
-              
-              <div className="scada-card p-4 mb-4">
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <div>
-                    <h3 className="fw-bold text-light m-0">Controlador de Luces RGB SCADA</h3>
-                    <small className="text-muted">Simulación de flujo eléctrico y espectro de color en canalizaciones LED</small>
-                  </div>
-                  
-                  <button 
-                    onClick={() => setRgbPower(!rgbPower)}
-                    className={`btn px-4 py-2 fw-bold d-flex align-items-center gap-2 ${rgbPower ? 'btn-danger' : 'btn-success'}`}
-                  >
-                    <span>{rgbPower ? '🛑 APAGAR LUCES' : '⚡ ENCENDER LUCES'}</span>
-                  </button>
-                </div>
-
-                <hr className="border-secondary my-4" />
-
-                <div className="mb-4">
-                  <label className="fw-bold text-light mb-2 d-flex justify-content-between">
-                    <span>Tira Dinámica de Flujo Eléctrico / Óptico:</span>
-                    <span className="text-info">{rgbPower ? `RGB(${activeColor.r}, ${activeColor.g}, ${activeColor.b})` : 'APAGADO'}</span>
-                  </label>
-
-                  <div 
-                    className={`rgb-strip-container ${rgbPower ? 'on' : 'off'}`}
-                    style={{ '--glow-color': glowShadowColor }}
-                  >
-                    {rgbPower ? (
-                      <div className="rgb-wave-bar" style={waveGradientStyle} />
-                    ) : (
-                      <div className="d-flex align-items-center justify-content-center h-100 text-muted fw-bold">
-                        [ ILUMINACIÓN DESACTIVADA ]
-                      </div>
-                    )}
-                    <div className="rgb-glass-overlay" />
-                  </div>
-                </div>
-
-                <div className="row g-3 align-items-end mb-3">
-                  <div className="col-md-7">
-                    <label className="form-label text-light fw-bold">
-                      Valores RGB (Formato: R, G, B de 0 a 255):
-                    </label>
-                    <div className="input-group">
-                      <span className="input-group-text bg-dark text-light border-secondary">rgb(</span>
-                      <input 
-                        type="text" 
-                        value={rgbInputText}
-                        onChange={(e) => setRgbInputText(e.target.value)}
-                        placeholder="255, 0, 128"
-                        disabled={!rgbPower}
-                        className="form-control bg-dark text-white border-secondary fs-5 fw-bold"
-                      />
-                      <span className="input-group-text bg-dark text-light border-secondary">)</span>
-                      <button 
-                        onClick={handleApplyRgb}
-                        disabled={!rgbPower}
-                        className="btn btn-primary fw-bold px-4"
-                      >
-                        Aplicar
-                      </button>
-                    </div>
-                    {rgbError && <small className="text-danger mt-1 d-block fw-semibold">{rgbError}</small>}
-                  </div>
-
-                  <div className="col-md-5">
-                    <label className="form-label text-light fw-bold d-block">Colores Rápidos:</label>
-                    <div className="d-flex gap-2 flex-wrap">
-                      <button 
-                        disabled={!rgbPower} 
-                        onClick={() => applyPresetColor(255, 0, 0)} 
-                        className="btn btn-sm text-white fw-bold flex-fill" 
-                        style={{ backgroundColor: '#e74c3c' }}
-                      >
-                        Rojo
-                      </button>
-                      <button 
-                        disabled={!rgbPower} 
-                        onClick={() => applyPresetColor(0, 255, 0)} 
-                        className="btn btn-sm text-dark fw-bold flex-fill" 
-                        style={{ backgroundColor: '#2ecc71' }}
-                      >
-                        Verde
-                      </button>
-                      <button 
-                        disabled={!rgbPower} 
-                        onClick={() => applyPresetColor(0, 128, 255)} 
-                        className="btn btn-sm text-white fw-bold flex-fill" 
-                        style={{ backgroundColor: '#3498db' }}
-                      >
-                        Azul
-                      </button>
-                      <button 
-                        disabled={!rgbPower} 
-                        onClick={() => applyPresetColor(255, 0, 255)} 
-                        className="btn btn-sm text-white fw-bold flex-fill" 
-                        style={{ backgroundColor: '#9b59b6' }}
-                      >
-                        Magenta
-                      </button>
-                      <button 
-                        disabled={!rgbPower} 
-                        onClick={() => applyPresetColor(255, 230, 0)} 
-                        className="btn btn-sm text-dark fw-bold flex-fill" 
-                        style={{ backgroundColor: '#f1c40f' }}
-                      >
-                        Amarillo
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-
-            </div>
-          </div>
-        )}
 
       </div>
     </div>
