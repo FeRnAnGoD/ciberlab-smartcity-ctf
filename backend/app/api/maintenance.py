@@ -310,6 +310,10 @@ PORTAL_HTML = r"""<!DOCTYPE html>
             clearInterval(timerInterval);
             document.getElementById('spawnView').style.display = 'block';
             document.getElementById('activeView').style.display = 'none';
+            // Resetear el botón siempre que volvemos a la vista inicial
+            const btn = document.getElementById('btnSpawn');
+            btn.innerText = '[ INICIAR SESIÓN DE MANTENIMIENTO ]';
+            btn.disabled = false;
         }
 
         function showActiveView(port, pass, seconds) {
@@ -344,7 +348,8 @@ PORTAL_HTML = r"""<!DOCTYPE html>
                 const res = await fetch('/api/maintenance/spawn', { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
-                    checkStatus();
+                    // Pequeño delay para que el estado sea consistente antes de consultar
+                    setTimeout(checkStatus, 800);
                 } else {
                     alert(data.error || 'Error al desplegar instancia');
                     btn.innerText = '[ INICIAR SESIÓN DE MANTENIMIENTO ]';
